@@ -1,0 +1,465 @@
+#include <iostream>
+#include <malloc.h>
+#include <string.h>
+#include <fstream>
+using namespace std;
+
+struct Staff_Info
+{
+    int num; //编号
+    char name[10];
+    char sex[4];
+    char birthday[20];
+    int age;
+    char phoneNumber[11];
+    char department[20];         //所属部门
+    char professional_title[20]; //职称
+    int wage_scale;              //工资级别（如1，2，3，4）
+};
+
+typedef struct StaffNode
+{
+    struct Staff_Info Staffdata;
+    struct StaffNode *next;
+    int Size;
+} Node, *LinkList;
+
+void printStaffInfo(Staff_Info *p);
+void Init(LinkList &head);
+void showMenu();
+void exitSystem();
+void addStaff(LinkList &head);
+void showStaffList(LinkList head);
+void delStaffByName(LinkList &head);
+LinkList isExist(LinkList head);
+void findStaffByName(LinkList head);
+void updateStaffByName(LinkList &head);
+void sortStaffByNum(LinkList &head);
+void sortStaffByAge(LinkList &head);
+void clearStaff(LinkList &head);
+void savefile(LinkList head);
+void readfile(LinkList &head);
+
+void showMenu()
+{
+    cout << "\t\t***************职工档案管理系统************" << endl;
+    cout << "\t\t\t\t1、录入职工信息" << endl;
+    cout << "\t\t\t\t2、显示职工信息" << endl;
+    cout << "\t\t\t\t3、删除职工信息" << endl;
+    cout << "\t\t\t\t4、查找职工信息" << endl;
+    cout << "\t\t\t\t5、修改职工信息" << endl;
+    cout << "\t\t\t\t6、按编号排序" << endl;
+    cout << "\t\t\t\t7、按年龄排序" << endl;
+    cout << "\t\t\t\t8、清空全部职工" << endl;
+    cout << "\t\t\t\t0、保存文件并退出系统\n"
+         << endl;
+    cout << "\t\t------> 请选择操作项并输入操作项编号：";
+}
+
+void exitSystem()
+{
+    cout << "欢迎下次使用，再见！" << endl;
+    system("pause");
+    exit(0);
+}
+
+void Init(LinkList &head) //初始化链表
+{
+    head = (Node *)malloc(sizeof(Node));
+    head->next = NULL;
+    head->Size = 0;
+}
+
+void printStaffInfo(Staff_Info *cur)
+{
+    cout << "编号：" << cur->num;
+    cout << "  姓名：" << cur->name;
+    cout << "  性别：" << cur->sex;
+    cout << "  生日：" << cur->birthday;
+    cout << "  年龄：" << cur->age;
+    cout << "  电话：" << cur->phoneNumber;
+    cout << "  所属部门：" << cur->department;
+    cout << "  职称：" << cur->professional_title;
+    cout << "  工资级别：" << cur->wage_scale << endl;
+} //该输出用于屏幕输出
+
+void addStaff(LinkList &head)
+{
+    LinkList t = head;
+    cout << "请输入你要添加的职工数量：";
+    int count = 0;
+    cin >> count;
+    while (t->next != NULL)
+    {
+        t = t->next;
+    } //开始赋值时，使t永远指向链表的最后一个节点
+    for (int i = 0; i < count; i++)
+    {
+        LinkList s = (Node *)malloc(sizeof(Node));
+
+        cout << "请输入职工的编号：";
+        cin >> s->Staffdata.num;
+        cout << "请输入职工的姓名：";
+        cin >> s->Staffdata.name;
+        cout << "请输入职工的性别：";
+        cin >> s->Staffdata.sex;
+        cout << "请输入职工的生日（如1999年03月14日）：";
+        cin >> s->Staffdata.birthday;
+        cout << "请输入职工的年龄：";
+        cin >> s->Staffdata.age;
+        cout << "请输入职工的电话：";
+        cin >> s->Staffdata.phoneNumber;
+        cout << "请输入职工的电话所属部门：";
+        cin >> s->Staffdata.department;
+        cout << "请输入职工的职称：";
+        cin >> s->Staffdata.professional_title;
+        cout << "请输入职工的工资级别：";
+        cin >> s->Staffdata.wage_scale;
+
+        t->next = s;
+        t = s;
+        head->Size++;
+        cout << "录入完成！" << endl;
+    }
+    t->next = NULL;
+    cout << "职工信息录入完成，本次共录入" << count << "个职工信息,共有" << head->Size << "个职工信息." << endl;
+    system("pause");
+    system("cls");
+}
+
+void showStaffList(LinkList head)
+{
+    if (head->Size == 0)
+    {
+        cout << "没有职工信息！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    cout << "已显示" << head->Size << "条职工信息" << endl;
+    cout << "↓" << endl;
+    LinkList p = head->next;
+    for (int i = 0; i < head->Size; i++)
+    {
+        printStaffInfo(&(p->Staffdata));
+        p = p->next;
+    }
+    system("pause");
+    system("cls");
+}
+
+LinkList isExist(LinkList head, char *name)
+{
+    LinkList p = head->next;
+    LinkList pre = head;                                                    //设置两个指针，便于删除与插入
+    for (int i = 0; i < head->Size && strcmp(p->Staffdata.name, name); i++) //比较两字符串，不相等时进行循环
+    {
+        p = p->next;
+        pre = pre->next;
+    }
+    if (p == NULL) //找不到
+    {
+        return NULL;
+    }
+    return pre; //找到返回前继节点
+}
+
+void delStaffByName(LinkList &head)
+{
+    cout << "请输入要删除的职工的姓名：";
+    char name[20];
+    cin >> name;
+    LinkList pos = isExist(head, name); //判断职工在链表中是否存在，若存在并返回它的前继指针，不存在则返回NULL
+    if (pos == NULL)
+    {
+        cout << "该职工不存在！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    else
+    {
+        LinkList d = pos->next; //d为待删除节点
+        pos->next = pos->next->next;
+        free(d);
+        cout << "删除完成！" << endl;
+        head->Size--;
+        system("pause");
+        system("cls");
+    }
+}
+
+void findStaffByName(LinkList head)
+{
+    cout << "请输入要查找的职工的姓名：";
+    char name[20];
+    cin >> name;
+    LinkList pos = isExist(head, name);
+    if (pos == NULL)
+    {
+        cout << "该职工不存在！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    else
+    {
+        printStaffInfo(&pos->next->Staffdata);
+        system("pause");
+        system("cls");
+    }
+}
+
+void sortStaffByNum(LinkList &head)
+{
+    cout << "请选择按编号排序的顺序（按0表示从小到大，按1表示从大到小）：";
+    int select;
+    cin >> select;
+    if (select == 0)
+    {
+        for (LinkList p = head->next; p != NULL; p = p->next)
+        {
+            for (LinkList q = head->next; q->next != NULL; q = q->next)
+            {
+                if (q->Staffdata.num > q->next->Staffdata.num)
+                {
+                    struct Staff_Info tempInfo = q->Staffdata;
+                    q->Staffdata = q->next->Staffdata;
+                    q->next->Staffdata = tempInfo;
+                }
+            }
+        }
+        cout << "排序完成！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    for (LinkList p = head->next; p != NULL; p = p->next)
+    {
+        for (LinkList q = head->next; q->next != NULL; q = q->next)
+        {
+            if (q->Staffdata.num < q->next->Staffdata.num)
+            {
+                struct Staff_Info tempInfo = q->Staffdata;
+                q->Staffdata = q->next->Staffdata;
+                q->next->Staffdata = tempInfo;
+            }
+        }
+    }
+    cout << "排序完成！" << endl;
+    system("pause");
+    system("cls");
+}
+
+void sortStaffByAge(LinkList &head)
+{
+    cout << "请选择按年龄排序的顺序（按0表示从小到大，按1表示从大到小）：";
+    int select;
+    cin >> select;
+    if (select == 0)
+    {
+        for (LinkList p = head->next; p != NULL; p = p->next)
+        {
+            for (LinkList q = head->next; q->next != NULL; q = q->next)
+            {
+                if (q->Staffdata.age > q->next->Staffdata.age)
+                {
+                    struct Staff_Info tempInfo = q->Staffdata;
+                    q->Staffdata = q->next->Staffdata;
+                    q->next->Staffdata = tempInfo;
+                }
+            }
+        }
+        cout << "排序完成！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    for (LinkList p = head->next; p != NULL; p = p->next)
+    {
+        for (LinkList q = head->next; q->next != NULL; q = q->next)
+        {
+            if (q->Staffdata.age < q->next->Staffdata.age)
+            {
+                struct Staff_Info tempInfo = q->Staffdata;
+                q->Staffdata = q->next->Staffdata;
+                q->next->Staffdata = tempInfo;
+            }
+        }
+    }
+    cout << "排序完成！" << endl;
+    system("pause");
+    system("cls");
+}
+void updateStaffByName(LinkList &head)
+{
+    cout << "请输入你要修改的职工的姓名：";
+    char name[20];
+    cin >> name;
+    LinkList pos = isExist(head, name);
+    if (pos == NULL)
+    {
+        cout << "该职工不存在！" << endl;
+        system("pause");
+        system("cls");
+        return;
+    }
+    else
+    {
+        cout << "请输入职工的编号：";
+        cin >> pos->next->Staffdata.num;
+        cout << "请输入职工的姓名：";
+        cin >> pos->next->Staffdata.name;
+        cout << "请输入职工的性别：";
+        cin >> pos->next->Staffdata.sex;
+        cout << "请输入职工的生日（如1999年03月14日）：";
+        cin >> pos->next->Staffdata.birthday;
+        cout << "请输入职工的年龄：";
+        cin >> pos->next->Staffdata.age;
+        cout << "请输入职工的电话：";
+        cin >> pos->next->Staffdata.phoneNumber;
+        cout << "请输入职工的电话所属部门：";
+        cin >> pos->next->Staffdata.department;
+        cout << "请输入职工的职称：";
+        cin >> pos->next->Staffdata.professional_title;
+        cout << "请输入职工的工资级别：";
+        cin >> pos->next->Staffdata.wage_scale;
+        system("pause");
+        system("cls");
+    }
+}
+
+void clearStaff(LinkList &head) //不释放头节点，只释放后继的所有节点
+{
+    LinkList p = head->next;
+    LinkList pre = p;
+    while (p != NULL)
+    {
+        p = p->next;
+        free(pre); //释放
+        pre = p;
+    }
+    free(pre);
+    head->Size = 0;
+    head->next = NULL;
+    cout << "职工信息已清空！" << endl;
+    system("pause");
+    system("cls");
+}
+
+//保存文件部分
+void savefile(LinkList head)
+{
+    ofstream ofs;
+    ofs.open("staff.txt", ios::out);
+
+    LinkList fp = head->next;
+    for (int i = 0; i < head->Size; i++)
+    {
+        ofs << fp->Staffdata.num << " "
+            << fp->Staffdata.name << " "
+            << fp->Staffdata.sex << " "
+            << fp->Staffdata.birthday << " "
+            << fp->Staffdata.age << " "
+            << fp->Staffdata.phoneNumber << " "
+            << fp->Staffdata.department << " "
+            << fp->Staffdata.professional_title << " "
+            << fp->Staffdata.wage_scale << endl; //以空格为分界符，分别读取
+        fp = fp->next;
+    }
+    ofs.close();
+}
+
+//程序启动时的初始化操作，需要从文件中读取文件，并保存到内存中
+void readfile(LinkList &head)
+{
+    ifstream ifs;
+    ifs.open("staff.txt", ios::in);
+
+    //1.文件不存在
+    if (!ifs.is_open())
+    {
+        cout << "文件不存在！" << endl;
+        Init(head);
+        head->Size = 0; //初始化链表
+        ifs.close();
+        return;
+    }
+    //2.正确初始化
+    int num; //编号
+    char name[10];
+    char sex[4];
+    char birthday[20];
+    int age;
+    char phoneNumber[11];
+    char department[20];         //所属部门
+    char professional_title[20]; //职称
+    int wage_scale;              //工资级别
+
+    Init(head);
+    LinkList t = head;
+    while (ifs >> num && ifs >> name && ifs >> sex && ifs >> birthday && ifs >> age && ifs >> phoneNumber && ifs >> department && ifs >> professional_title && ifs >> wage_scale)
+    {
+        LinkList s = (Node *)malloc(sizeof(Node));
+        s->Staffdata.num = num;
+        strcpy(s->Staffdata.name, name);
+        strcpy(s->Staffdata.sex, sex);
+        strcpy(s->Staffdata.birthday, birthday);
+        s->Staffdata.age = age;
+        strcpy(s->Staffdata.phoneNumber, phoneNumber);
+        strcpy(s->Staffdata.department, department);
+        strcpy(s->Staffdata.professional_title, professional_title);
+        s->Staffdata.wage_scale = wage_scale;
+
+        t->next = s;
+        t = s;
+        head->Size++;
+    }
+    t->next = NULL;
+    ifs.close();
+    cout << "文件初始化成功!初始化了" << head->Size << "个职工信息。" << endl;
+}
+
+int main()
+{
+    LinkList sta;
+    readfile(sta);
+    int select = 0;
+    while (1)
+    {
+        showMenu();
+        cin >> select;
+        switch (select)
+        {
+        case 1:
+            addStaff(sta);
+            break;
+        case 2:
+            showStaffList(sta);
+            break;
+        case 3:
+            delStaffByName(sta);
+            break;
+        case 4:
+            findStaffByName(sta);
+            break;
+        case 5:
+            updateStaffByName(sta);
+            break;
+        case 6:
+            sortStaffByNum(sta);
+            break;
+        case 7:
+            sortStaffByAge(sta);
+            break;
+        case 8:
+            clearStaff(sta);
+            break;
+        case 0:
+            savefile(sta);
+            exitSystem();
+            break;
+        }
+    }
+    free(sta);
+}
